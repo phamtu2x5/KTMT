@@ -4,14 +4,14 @@
     if_p1 db 0d               ;Kiem tra xem nguoi choi 1 da nhap ten chua
     if_p2 db 0d               ;Kiem tra xem nguoi choi 2 da nhap ten chua
     crlf  db 13,10,'$'
-    player_pos dw 1760d       ;Vi tri nguoi choi
-    arrow_pos dw 0d           ;Vi tri mui ten
-    arrow_status db 0d        ;0=San sang de ban mui ten moi, !0=Co mui ten dang bay
-    arrow_limit dw 22d        ;Gioi han bay cua mui ten
-    balloon_pos dw 3860d      ;Vi tri bong bay
+    player_pos    dw 1760d       ;Vi tri nguoi choi
+    arrow_pos     dw 0d           ;Vi tri mui ten
+    arrow_status  db 0d        ;0=San sang de ban mui ten moi, !0=Co mui ten dang bay
+    arrow_limit   dw 22d        ;Gioi han bay cua mui ten
+    balloon_pos   dw 3860d      ;Vi tri bong bay
     
-    direction  db 0d          ;Huong di chuyen cua Player
-    direction_up equ 8         ;Quy dinh ma so 8 cho huong len
+    direction      db 0d          ;Huong di chuyen cua Player
+    direction_up   equ 8         ;Quy dinh ma so 8 cho huong len
     direction_down equ 2       ;Quy dinh ma so 2 cho huong xuong
     
     high_score dw ' ',10,13,             
@@ -19,7 +19,7 @@
                dw '                                  High Scores: ',10,13,
                
                dw ' ',10,13,
-               dw , ,,10,13,
+               dw ' ',10,13,
                dw '                            Name      |      Score: $'       ,10,13,
     name_list dw    '                                                                                                                                                                $',10,13,
     
@@ -87,8 +87,8 @@
 Main Proc
     mov AX,@Data
     mov  DS,AX
-    mov  AX,0B800H
-    mov  ES,AX
+    mov  AX,0B800H                    
+    mov  ES,AX                         ;Sao chep dia chi segment bat dau cua bo nho dem video vao thanh ghi ES
     
 start:
     lea dx,TB_BATDAU
@@ -98,14 +98,14 @@ input:
     mov ah,1                           ;Nhap Index nguoi choi
     int 21h
     cmp al,'1'               
-    je display_name1                   ;Neu nhap '1' -> Nhay den thao tac nhap ten Player1
+    je Display_name1                   ;Neu nhap '1' -> Nhay den thao tac nhap ten Player1
     cmp al,'2'              
     je clear_and_display2              ;Neu nhap '1' -> Nhay den thao tac nhap ten Player1
     cmp al,13d              
-    je continue
+    je continue                        ;Neu nhan phim enter -> Nhay den continue
     cmp times,1
     je game_over                                                                    
-    jne start 
+    jne start                          ;Neu khong nhan cac phim hop le, quay tro lai man hinh bat dau
 
 clear_and_display2:
     CALL Clear_screen      
@@ -113,21 +113,21 @@ clear_and_display2:
         
 continue:
     
-    mov ah,0
-    mov al,3
-    int 10h
+    mov ah,0                           
+    mov al,3                           ;Che do video 3 de xoa man hinh cu
+    int 10h                            ;Xoa man hinh
     
-    cmp times,0
-    je display_name1
+    cmp times,0                        
+    je display_name1                   ;Neu nhap Enter luc bat dau game, mac dinh la nguoi choi 1
     cmp times,1
-    je show_name1
-    jne show_name2
+    je show_name1                      ;Neu dang la nguoi choi 1 va bam Enter-> Choi lai
+    jne show_name2                     ;Neu dang la nguoi choi 2 va bam Enter-> Choi lai
 main_loop:
 
-    mov ah,01H
+    mov ah,1                                        ;Chuc nang 1 cua INT 16H de kiem tra bo dem ban phim 
     int 16h
     
-    jne key_pressed
+    jne key_pressed                                 ;Neu co phim duoc nhan -> Nhay den Key_pressed
     
     cmp miss,8
     jge game_over                                   ;Neu miss >=8 , Game Over
@@ -285,16 +285,16 @@ key_pressed:
    cmp ah, 39h                      ;Nhan phim Space
    je spaceKey 
    
-   cmp ah, 48h                      ;Nhan phim "↑"
+   cmp ah, 48h                      ;Nhan phim UpKey
    je upKey
    
-   cmp ah, 50h                      ;Nhan phim "↓"
+   cmp ah, 50h                      ;Nhan phim DownKey
    je downKey
    
-   cmp ah, 4Bh                      ;Nhan phim "←"
+   cmp ah, 4Bh                      ;Nhan phim LeftKey
    je leftKey
    
-   cmp ah, 4Dh                      ;Nhan phim "→"
+   cmp ah, 4Dh                      ;Nhan phim RightKey
    je rightKey
    
    jmp main_loop
@@ -609,16 +609,16 @@ ret
 clear_screen endp 
 
 display_name1 proc
-     cmp if_p1, 0                                                    
-     jne show_name1
+     cmp if_p1, 0                                  ;Kiem tra xem nguoi choi 1 da choi lan nao chua                  
+     jne show_name1                                ;Neu roi -> In ra Ten va tiep tuc choi 
      
-     mov times, 1                                                     
+     mov times, 1                                  ;Cap nhat dang la luot choi cua Player1                  
      
      mov ax, @data                                                      
      mov ds, ax
      lea dx, msg
      mov ah, 9                                                        
-     int 21h
+     int 21h                                       ;In ra thong bao nhap Ten o lan dau choi
         
      mov cx, 2
      mov si, offset name_player1
