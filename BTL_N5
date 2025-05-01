@@ -152,130 +152,130 @@ main_loop:
 
 HIT:
     MOV AH,2
-    MOV DL,7D           ; Phat am thanh khi shoot trúng balloon
-                        ; DL = 7h (ascii beep) => phát ra tieng beep khi shoot trúng bóng bay
+    MOV DL,7D           ; Phat am thanh khi shoot trï¿½ng balloon
+                        ; DL = 7h (ascii beep) => phï¿½t ra tieng beep khi shoot trï¿½ng bï¿½ng bay
     INT 21H
     
-    INC hits            ; Tang so luong hits lên
+    INC hits            ; Tang so luong hits lï¿½n
     CMP times,1
     JE p1ShootCorrect   ; Tang diem cho nguoi choi 1 
     JNE p2ShootCorrect  ; Tang diem cho nguoi choi 2
     
 Render_balloon:
-    MOV CL,' '          ; Xóa bóng cu~ 
-    MOV CH,1111B        ; CH dùng de luu màu sac cua ky tu trong bo nho video
-                        ; 1111 là mau trang (màu mac dinh cho màn hinh van ban trong nhieu he thong)
+    MOV CL,' '          ; Xï¿½a bï¿½ng cu~ 
+    MOV CH,1111B        ; CH dï¿½ng de luu mï¿½u sac cua ky tu trong bo nho video
+                        ; 1111 lï¿½ mau trang (mï¿½u mac dinh cho mï¿½n hinh van ban trong nhieu he thong)
     ;CX : byte cao phu trach ky tu in ra
-    ;     byte thap phu trach cac thuoc tính nhu : màu sac , kieu hien thi cua ky tu                        
+    ;     byte thap phu trach cac thuoc tï¿½nh nhu : mï¿½u sac , kieu hien thi cua ky tu                        
     
-    ;CH = 1111B (tuc 0Fh): n?n den, ch? tr?ng sáng.
-    ;CH = 0010B (tuc 02h): n?n den, ch? xanh lá.
-    ;CH = 1001B (tuc 09h): n?n den, ch? xanh duong sáng.
-    ;CH = 1100B (tuc 0Ch): n?n den, ch? d? sáng.
+    ;CH = 1111B (tuc 0Fh): n?n den, ch? tr?ng sï¿½ng.
+    ;CH = 0010B (tuc 02h): n?n den, ch? xanh lï¿½.
+    ;CH = 1001B (tuc 09h): n?n den, ch? xanh duong sï¿½ng.
+    ;CH = 1100B (tuc 0Ch): n?n den, ch? d? sï¿½ng.
     
-    MOV BX,balloon_pos  ; Lay vi trí hien tai cua bóng
-    MOV ES:[BX],CX      ; Ghi khoang trong vao vi tri bóng cu~ de xóa bóng cu~ di
+    MOV BX,balloon_pos  ; Lay vi trï¿½ hien tai cua bï¿½ng
+    MOV ES:[BX],CX      ; Ghi khoang trong vao vi tri bï¿½ng cu~ de xï¿½a bï¿½ng cu~ di
     
     CMP hits,2          ; Kiem tra so lan ban trung
     JE Speedup_2x       ; Neu ban trung 1 so lan quy dinh thi se tang toc do                            
     
     CMP hits,3          
     JE Speedup_2x
-    JG Speedup_3x            ; Neu hits > 3 => Tang toc do bóng len x3
+    JG Speedup_3x            ; Neu hits > 3 => Tang toc do bï¿½ng len x3
     
-    SUB balloon_pos,160d     ; Di chuyen bóng len tren(Tuc la ve~ bóng moi)
-                             ; Di chuyen bóng len 1 dong` = 160 byte
+    SUB balloon_pos,160d     ; Di chuyen bï¿½ng len tren(Tuc la ve~ bï¿½ng moi)
+                             ; Di chuyen bï¿½ng len 1 dong` = 160 byte
     ; Moi dong trong che do 80x25 text mode VGA chiem 160 byte
     ; (80 ky tu x 2byte/ky tu = 160 byte)
                             
-    ;Ve~ bóng moi ( Khác so voi viec xóa bóng cu~ o phia tren )                             
-    MOV CL,15d               ; Ma~ kí tu cho bóng moi
-    ; 15d trong ASCII mo rong : là bieu tuong mat cuoi hoac 1 dâu' tron`
-    MOV CH,0010B             ; Màu bóng (màu xanh lá cay)
+    ;Ve~ bï¿½ng moi ( Khï¿½c so voi viec xï¿½a bï¿½ng cu~ o phia tren )                             
+    MOV CL,15d               ; Ma~ kï¿½ tu cho bï¿½ng moi
+    ; 15d trong ASCII mo rong : lï¿½ bieu tuong mat cuoi hoac 1 dï¿½u' tron`
+    MOV CH,0010B             ; Mï¿½u bï¿½ng (mï¿½u xanh lï¿½ cay)
     
-    MOV BX,balloon_pos       ; Lay vi trí hien tai cua bóng
-    MOV ES:[BX],CX           ; Dat bóng vua ve vao vi tri 
+    MOV BX,balloon_pos       ; Lay vi trï¿½ hien tai cua bï¿½ng
+    MOV ES:[BX],CX           ; Dat bï¿½ng vua ve vao vi tri 
     
-    CMP arrow_status,1      ; Kiem tra xem có mui~ ten dang ban không
+    CMP arrow_status,1      ; Kiem tra xem cï¿½ mui~ ten dang ban khï¿½ng
     ; arrow_status = 0 : mui ten san sang (chua duoc ban)
     ; arrow_status != 0: mui ten dang bay      
-    JE Render_arrow          ; Neu có , xu ly' ve~ mui~ ten
-    JNE Inside_loop2         ; Neu không , tiep tuc vong lap
+    JE Render_arrow          ; Neu cï¿½ , xu ly' ve~ mui~ ten
+    JNE Inside_loop2         ; Neu khï¿½ng , tiep tuc vong lap
     
 Speedup_2x:
     SUB balloon_pos,320d    ; Tang toc do cua bong len gap doi
     ; 160x2 = 320 => nhay 2 dong trong 1 buoc
     
-    MOV CL,15D              ; Ve~ bóng
-    MOV CH,0010B            ; Màu bóng (màu xanh lá cay)
+    MOV CL,15D              ; Ve~ bï¿½ng
+    MOV CH,0010B            ; Mï¿½u bï¿½ng (mï¿½u xanh lï¿½ cay)
     
-    MOV BX,balloon_pos      ; Lay vi trí hien tai cua bóng
-    MOV ES:[BX],CX          ; Dat bong vua ve~ vào vi trí 
+    MOV BX,balloon_pos      ; Lay vi trï¿½ hien tai cua bï¿½ng
+    MOV ES:[BX],CX          ; Dat bong vua ve~ vï¿½o vi trï¿½ 
     
-    CMP arrow_status,1d     ; Kiem tra xem có mui~ ten dang ban không
+    CMP arrow_status,1d     ; Kiem tra xem cï¿½ mui~ ten dang ban khï¿½ng
                             ; arrow_status = 0 : mui ten san sang (chua duoc ban)
                             ; arrow_status != 0: mui ten dang bay
-    JE Render_arrow         ; Neu có , xu ly' goi label ve~ mui ten
-    JNE Inside_loop2        ; Neu không , tiep tuc vong lap
+    JE Render_arrow         ; Neu cï¿½ , xu ly' goi label ve~ mui ten
+    JNE Inside_loop2        ; Neu khï¿½ng , tiep tuc vong lap
     
 Speedup_3x:
     SUB balloon_pos,480d    ; Tang toc do cua bong len gap ba 
     
-    MOV CL,15D              ; Ve~ bóng
-    MOV CH,0010B            ; Màu bóng
+    MOV CL,15D              ; Ve~ bï¿½ng
+    MOV CH,0010B            ; Mï¿½u bï¿½ng
     
-    MOV BX,balloon_pos      ; Lay vi tri hien tai cua bóng
-    MOV ES:[BX],CX          ; Dat bóng vua ve~ vào vi trí
+    MOV BX,balloon_pos      ; Lay vi tri hien tai cua bï¿½ng
+    MOV ES:[BX],CX          ; Dat bï¿½ng vua ve~ vï¿½o vi trï¿½
     
-    CMP arrow_status,1d     ; Kiem tra xem có mui~ ten dang ban không
+    CMP arrow_status,1d     ; Kiem tra xem cï¿½ mui~ ten dang ban khï¿½ng
                             ; arrow_status = 0 : mui ten san sang (chua duoc ban)
                             ; arrow_status != 0: mui ten dang bay
-    JE Render_arrow         ; Neu có , xu ly' goi label ve~ mui ten
-    JNE Inside_loop2        ; Neu không , tiep tuc vong lap
+    JE Render_arrow         ; Neu cï¿½ , xu ly' goi label ve~ mui ten
+    JNE Inside_loop2        ; Neu khï¿½ng , tiep tuc vong lap
     
 Render_arrow:
     MOV CL,' '              ; Xoa vi tri cu~
-    MOV CH,1111B            ; Màu mac dinh (dùng de xóa mui~ ten)
+    MOV CH,1111B            ; Mï¿½u mac dinh (dï¿½ng de xï¿½a mui~ ten)
     
     MOV BX,arrow_pos
     MOV ES:[BX],CX
     
     ADD arrow_pos,4d        ; Ve~ mui ten moi
-    MOV CL,26D              ; ma~ ASCII cho kí tu mui~ ten
-    MOV CH,1001B            ; màu mui~ ten
+    MOV CL,26D              ; ma~ ASCII cho kï¿½ tu mui~ ten
+    MOV CH,1001B            ; mï¿½u mui~ ten
     
-    MOV BX,arrow_pos        ; Lay vi trí mui~ ten
-    MOV ES:[BX],CX          ; Dat mui~ ten vua ve~ vào vi trí
+    MOV BX,arrow_pos        ; Lay vi trï¿½ mui~ ten
+    MOV ES:[BX],CX          ; Dat mui~ ten vua ve~ vï¿½o vi trï¿½
 
 Inside_loop2:
-    MOV CL,125D             ; Ve~ nguoi choi (nguoi choi la ki tu '}' giong cái cung )
-    MOV CH,1100B            ; màu sac player
-    MOV BX,player_pos       ; Vi trí hien tai cua player
-    MOV ES:[BX],CX          ; Chuyen player vua ve~ vào vi trí 
+    MOV CL,125D             ; Ve~ nguoi choi (nguoi choi la ki tu '}' giong cï¿½i cung )
+    MOV CH,1100B            ; mï¿½u sac player
+    MOV BX,player_pos       ; Vi trï¿½ hien tai cua player
+    MOV ES:[BX],CX          ; Chuyen player vua ve~ vï¿½o vi trï¿½ 
     
     JMP MAIN_LOOP  
 
-; Hàm di chuyen lên cua player
+; Hï¿½m di chuyen lï¿½n cua player
 Move_up:
-    MOV CL,' '              ; Xóa vi trí cu~
-    MOV CH,1111B            ; Màu player
+    MOV CL,' '              ; Xï¿½a vi trï¿½ cu~
+    MOV CH,1111B            ; Mï¿½u player
     
-    MOV BX,player_pos       ; Lay vi trí cu~
-    MOV ES:[BX],CX          ; Xóa player bang cách chèn màu mac dinh và khoang trong vua tao vào
+    MOV BX,player_pos       ; Lay vi trï¿½ cu~
+    MOV ES:[BX],CX          ; Xï¿½a player bang cï¿½ch chï¿½n mï¿½u mac dinh vï¿½ khoang trong vua tao vï¿½o
     
     SUB player_pos,160d     ; Di chuyen len 1 dong` = 160 byte
-    MOV direction,0         ; reset direction ve 0 de tránh viec di chuyen lien tuc mà k can nhan phim
+    MOV direction,0         ; reset direction ve 0 de trï¿½nh viec di chuyen lien tuc mï¿½ k can nhan phim
     
     JMP MAIN_LOOP
     
 Move_down:
-    MOV CL,' '              ; Xóa vi trí cu~
-    MOV CH,1111B            ; Màu player
-    MOV BX,player_pos       ; Lay vi trí cu~
-    MOV ES:[BX],CX          ; Xóa player bang cách chèn màu mac dinh và khoang trong vua tao vào
+    MOV CL,' '              ; Xï¿½a vi trï¿½ cu~
+    MOV CH,1111B            ; Mï¿½u player
+    MOV BX,player_pos       ; Lay vi trï¿½ cu~
+    MOV ES:[BX],CX          ; Xï¿½a player bang cï¿½ch chï¿½n mï¿½u mac dinh vï¿½ khoang trong vua tao vï¿½o
     
     ADD player_pos,160d     ; Di chuyen xuong 1 dong` = 160 byte
-    MOV direction,0         ; reset direction ve 0 de tránh viec di chuyen lien tuc mà k can nhan phim
+    MOV direction,0         ; reset direction ve 0 de trï¿½nh viec di chuyen lien tuc mï¿½ k can nhan phim
     
     JMP MAIN_LOOP   
 key_pressed:
@@ -697,7 +697,7 @@ display_name2 proc
      inc si
      loop loop12
       
-     call clear_screen
+     call clear_screen              ;xoa man hinh
      mov ax, @data
      mov ds, ax
      lea dx, msg
@@ -753,7 +753,7 @@ ret
 score_list endp
 
 best_1 proc
-    mov  dx, name_player1
+    mov  dx, name_player1       
     add cx,48d
     mov [bx],  10d
     mov [bx+57], dx     
