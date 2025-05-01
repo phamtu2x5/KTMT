@@ -329,7 +329,7 @@ leftKey:
    mov ah, 9
    int 21h
    mov ah, 2
-   mov dl, 0dh
+   mov dl, 13
    int 21h
    jmp main_loop
    
@@ -345,18 +345,18 @@ shoot:
    jmp main_loop
    
 miss_balloon:
-   add miss, 1                      ;Tang miss len 1
+   add miss, 1                      ;Tang miss them 1
    call show_score                  
    lea dx, state
    mov ah, 9
    int 21h                          ;Hien thi diem moi
    mov ah, 2
-   mov dl, 0dh                      ;Xuong dong de tranh in de
+   mov dl, 13                       ;Xuong dong de tranh in de
    int 21h
    jmp create_balloon 
    
 create_balloon:
-   mov balloon_pos, 3860d
+   mov balloon_pos, 3860d           ;Tao lai vi tri bong o vi tri ban dau
    jmp render_balloon
    
 hide_arrow:
@@ -366,31 +366,27 @@ hide_arrow:
    mov bx, arrow_pos
    mov es:[bx], cx                  ;Xoa mui ten
    
-   cmp balloon_pos, 0d               ;Kiem tra vi tri cua bong
-   jle miss_balloon                  ;If bong khong con trong man hinh thi nhay den miss
-   jmp render_balloon                ;Else tiep tuc ve bong
+   cmp balloon_pos, 0d              ;Kiem tra vi tri cua bong
+   jle miss_balloon                 ;If bong khong con trong man hinh thi nhay den miss
+   jmp render_balloon               ;Else tiep tuc ve bong
    
 game_over:
-   call clear_screen                ;Tha la bo di het ta lam lai tu dau
+   call clear_screen                ;Xoa man hinh
    mov currentScoreOfPlayer1, 0
    mov currentScoreOfPlayer2, 0
    
-   mov ah, 9                        ;In diem cao nhat cua moi player
+   mov ah, 9                        ;In ra doan highscore, score va name
    mov dx, offset high_score
    int 21h
    
-   call score_list
-   mov ah, 9
+   call score_list                    
+   mov ah, 9                        ;In ra ten cac nguoi choi
    mov dx, offset name_list
    int 21h
    
-   mov ah, 9
-   mov dx, offset game_over_board
-   int 21h
-   
-   mov cl, ' '
-   mov bx, arrow_pos
-   mov bx, player_pos 
+   mov ah, 9                         
+   mov dx, offset game_over_board   ;In ra phan gameover
+   int 21h 
     
    mov hits, 0                      ;Reset cac gia tri de play again
    mov miss, 0
