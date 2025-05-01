@@ -1,0 +1,773 @@
+.Model Large                  ;Khai bao kich thuoc bo nho su dung la large
+.Stack 100H
+.Data
+    if_p1 db 0d               ;Kiem tra xem nguoi choi 1 da nhap ten chua
+    if_p2 db 0d               ;Kiem tra xem nguoi choi 2 da nhap ten chua
+    crlf  db 13,10,'$'
+    player_pos dw 1760d       ;Vi tri nguoi choi
+    arrow_pos dw 0d           ;Vi tri mui ten
+    arrow_status db 0d        ;0=San sang de ban mui ten moi, !0=Co mui ten dang bay
+    arrow_limit dw 22d        ;Gioi han bay cua mui ten
+    balloon_pos dw 3860d      ;Vi tri bong bay
+    
+    direction  db 0d          ;Huong di chuyen cua Player
+    direction_up equ 8         ;Quy dinh ma so 8 cho huong len
+    direction_down equ 2       ;Quy dinh ma so 2 cho huong xuong
+    
+    high_score dw ' ',10,13,             
+               dw ' ',10,13,
+               dw '                                  High Scores: ',10,13,
+               
+               dw ' ',10,13,
+               dw , ,,10,13,
+               dw '                            Name      |      Score: $'       ,10,13,
+    name_list dw    '                                                                                                                                                                $',10,13,
+    
+    state      db 'iiiiiiiiiiiddddddddddddddddddd$',10,13,   
+    
+    hits dw 0d
+    miss dw 0d
+    highScore dw 0d
+    greatestScoreOfPlayer1 dw 0d
+    greatestScoreOfPlayer2 dw 0d
+    currentScoreOfPlayer1  dw 0d
+    currentScoreOfPlayer2  dw 0d
+    
+    game_over_board dw '  ',10,13
+    dw ' ',10,13
+    dw    '          --------------------------------------------------------      ',10,13
+    dw    '          ########################################################      ',10,13
+    dw ' ',10,13
+    dw ' ',10,13
+    dw ' ',10,13
+    dw '                                Game Over',10,13
+    dw '                        Press Enter to start again',10,13
+    dw ' ',10,13
+    dw ' ',10,13
+    dw '                        For 1st player press ( 1 ) ',10,13
+    dw '                        For 2nd player press ( 2 ) ',10,13
+    dw '                     For retry with current player press ( enter ) $',10,13
+      
+    TB_BATDAU dw '                                                                     ',10,13,
+    dw '                                                                     ',10,13,
+    dw '                                                                     ',10,13,
+    dw '                                                                     ',10,13,
+    dw '              *****************************************************',10,13, 
+    dw '              *                                                   *',10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *              BALLOON SHOOTING GAME                *',10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *      This game is made by Team 05 - Group 10      *',10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *          COMPUTER ARCHITECTURE - D23PTIT          *',10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *              Teacher: Tran Tien Cong              *',10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *      --------------------------------------       *',10,13,
+    dw '              *        Use up and down key to move player         *',10,13,
+    dw '              *           and space button to shoot               *',10,13,
+    dw '              *      --------------------------------------       *',10,13,
+    dw "              *  Take Care You only get 8 misses then you're out  *",10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *          >>>>Press Enter to start<<<<             *',10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *                                                   *',10,13,
+    dw '              *****************************************************',10,13,'$'
+    
+    msg db 10, 13, " UserName: $"
+    
+    name_player1 dw 2 dup(?)          ;Ten nguoi choi 1
+    name_player2 dw 2 dup(?)          ;Ten nguoi choi 2
+    
+    times        db 0d
+       
+.Code
+Main Proc
+    mov AX,@Data
+    mov  DS,AX
+    mov  AX,0B800H
+    mov  ES,AX
+    
+start:
+    lea dx,TB_BATDAU
+    mov AH,9
+    INT 21H                            ;In ra man hinh thong bao bat dau game
+input:
+    mov ah,1                           ;Nhap Index nguoi choi
+    int 21h
+    cmp al,'1'               
+    je display_name1                   ;Neu nhap '1' -> Nhay den thao tac nhap ten Player1
+    cmp al,'2'              
+    je clear_and_display2              ;Neu nhap '1' -> Nhay den thao tac nhap ten Player1
+    cmp al,13d              
+    je continue
+    cmp times,1
+    je game_over                                                                    
+    jne start 
+
+clear_and_display2:
+    CALL Clear_screen      
+    JMP Display_name2
+        
+continue:
+    
+    mov ah,0
+    mov al,3
+    int 10h
+    
+    cmp times,0
+    je display_name1
+    cmp times,1
+    je show_name1
+    jne show_name2
+main_loop:
+
+    mov ah,01H
+    int 16h
+    
+    jne key_pressed
+    
+    cmp miss,8
+    jge game_over                                   ;Neu miss >=8 , Game Over
+    
+    mov dx,arrow_pos
+    cmp dx,balloon_pos
+    je hit                                          ;Neu mui ten va bong cham nhau, tang diem
+    
+    cmp direction,direction_up
+    je Move_up                                      ;Di chuyen Player len neu nhan Up Key
+    
+    cmp direction,direction_down
+    je Move_down                                    ;Di chuyen Player xuong neu nhan Down Key
+    
+    mov dx,arrow_limit
+    cmp arrow_pos,dx
+    jge hide_arrow                                  ;An mui ten di neu bay qua limit
+    
+    cmp balloon_pos,0d
+    jle miss_balloon                                ;Neu bong bay qua man hinh, tang miss
+    jne render_balloon                              ;Neu khong thi tiep tuc ve bong
+
+HIT:
+    MOV AH,2
+    MOV DL,7D           ; Phat am thanh khi shoot trúng balloon
+                        ; DL = 7h (ascii beep) => phát ra tieng beep khi shoot trúng bóng bay
+    INT 21H
+    
+    INC hits            ; Tang so luong hits lên
+    CMP times,1
+    JE p1ShootCorrect   ; Tang diem cho nguoi choi 1 
+    JNE p2ShootCorrect  ; Tang diem cho nguoi choi 2
+    
+Render_balloon:
+    MOV CL,' '          ; Xóa bóng cu~ 
+    MOV CH,1111B        ; CH dùng de luu màu sac cua ky tu trong bo nho video
+                        ; 1111 là mau trang (màu mac dinh cho màn hinh van ban trong nhieu he thong)
+    ;CX : byte cao phu trach ky tu in ra
+    ;     byte thap phu trach cac thuoc tính nhu : màu sac , kieu hien thi cua ky tu                        
+    
+    ;CH = 1111B (tuc 0Fh): n?n den, ch? tr?ng sáng.
+    ;CH = 0010B (tuc 02h): n?n den, ch? xanh lá.
+    ;CH = 1001B (tuc 09h): n?n den, ch? xanh duong sáng.
+    ;CH = 1100B (tuc 0Ch): n?n den, ch? d? sáng.
+    
+    MOV BX,balloon_pos  ; Lay vi trí hien tai cua bóng
+    MOV ES:[BX],CX      ; Ghi khoang trong vao vi tri bóng cu~ de xóa bóng cu~ di
+    
+    CMP hits,2          ; Kiem tra so lan ban trung
+    JE Speedup_2x       ; Neu ban trung 1 so lan quy dinh thi se tang toc do                            
+    
+    CMP hits,3          
+    JE Speedup_2x
+    JG Speedup_3x            ; Neu hits > 3 => Tang toc do bóng len x3
+    
+    SUB balloon_pos,160d     ; Di chuyen bóng len tren(Tuc la ve~ bóng moi)
+                             ; Di chuyen bóng len 1 dong` = 160 byte
+    ; Moi dong trong che do 80x25 text mode VGA chiem 160 byte
+    ; (80 ky tu x 2byte/ky tu = 160 byte)
+                            
+    ;Ve~ bóng moi ( Khác so voi viec xóa bóng cu~ o phia tren )                             
+    MOV CL,15d               ; Ma~ kí tu cho bóng moi
+    ; 15d trong ASCII mo rong : là bieu tuong mat cuoi hoac 1 dâu' tron`
+    MOV CH,0010B             ; Màu bóng (màu xanh lá cay)
+    
+    MOV BX,balloon_pos       ; Lay vi trí hien tai cua bóng
+    MOV ES:[BX],CX           ; Dat bóng vua ve vao vi tri 
+    
+    CMP arrow_status,1      ; Kiem tra xem có mui~ ten dang ban không
+    ; arrow_status = 0 : mui ten san sang (chua duoc ban)
+    ; arrow_status != 0: mui ten dang bay      
+    JE Render_arrow          ; Neu có , xu ly' ve~ mui~ ten
+    JNE Inside_loop2         ; Neu không , tiep tuc vong lap
+    
+Speedup_2x:
+    SUB balloon_pos,320d    ; Tang toc do cua bong len gap doi
+    ; 160x2 = 320 => nhay 2 dong trong 1 buoc
+    
+    MOV CL,15D              ; Ve~ bóng
+    MOV CH,0010B            ; Màu bóng (màu xanh lá cay)
+    
+    MOV BX,balloon_pos      ; Lay vi trí hien tai cua bóng
+    MOV ES:[BX],CX          ; Dat bong vua ve~ vào vi trí 
+    
+    CMP arrow_status,1d     ; Kiem tra xem có mui~ ten dang ban không
+                            ; arrow_status = 0 : mui ten san sang (chua duoc ban)
+                            ; arrow_status != 0: mui ten dang bay
+    JE Render_arrow         ; Neu có , xu ly' goi label ve~ mui ten
+    JNE Inside_loop2        ; Neu không , tiep tuc vong lap
+    
+Speedup_3x:
+    SUB balloon_pos,480d    ; Tang toc do cua bong len gap ba 
+    
+    MOV CL,15D              ; Ve~ bóng
+    MOV CH,0010B            ; Màu bóng
+    
+    MOV BX,balloon_pos      ; Lay vi tri hien tai cua bóng
+    MOV ES:[BX],CX          ; Dat bóng vua ve~ vào vi trí
+    
+    CMP arrow_status,1d     ; Kiem tra xem có mui~ ten dang ban không
+                            ; arrow_status = 0 : mui ten san sang (chua duoc ban)
+                            ; arrow_status != 0: mui ten dang bay
+    JE Render_arrow         ; Neu có , xu ly' goi label ve~ mui ten
+    JNE Inside_loop2        ; Neu không , tiep tuc vong lap
+    
+Render_arrow:
+    MOV CL,' '              ; Xoa vi tri cu~
+    MOV CH,1111B            ; Màu mac dinh (dùng de xóa mui~ ten)
+    
+    MOV BX,arrow_pos
+    MOV ES:[BX],CX
+    
+    ADD arrow_pos,4d        ; Ve~ mui ten moi
+    MOV CL,26D              ; ma~ ASCII cho kí tu mui~ ten
+    MOV CH,1001B            ; màu mui~ ten
+    
+    MOV BX,arrow_pos        ; Lay vi trí mui~ ten
+    MOV ES:[BX],CX          ; Dat mui~ ten vua ve~ vào vi trí
+
+Inside_loop2:
+    MOV CL,125D             ; Ve~ nguoi choi (nguoi choi la ki tu '}' giong cái cung )
+    MOV CH,1100B            ; màu sac player
+    MOV BX,player_pos       ; Vi trí hien tai cua player
+    MOV ES:[BX],CX          ; Chuyen player vua ve~ vào vi trí 
+    
+    JMP MAIN_LOOP  
+
+; Hàm di chuyen lên cua player
+Move_up:
+    MOV CL,' '              ; Xóa vi trí cu~
+    MOV CH,1111B            ; Màu player
+    
+    MOV BX,player_pos       ; Lay vi trí cu~
+    MOV ES:[BX],CX          ; Xóa player bang cách chèn màu mac dinh và khoang trong vua tao vào
+    
+    SUB player_pos,160d     ; Di chuyen len 1 dong` = 160 byte
+    MOV direction,0         ; reset direction ve 0 de tránh viec di chuyen lien tuc mà k can nhan phim
+    
+    JMP MAIN_LOOP
+    
+Move_down:
+    MOV CL,' '              ; Xóa vi trí cu~
+    MOV CH,1111B            ; Màu player
+    MOV BX,player_pos       ; Lay vi trí cu~
+    MOV ES:[BX],CX          ; Xóa player bang cách chèn màu mac dinh và khoang trong vua tao vào
+    
+    ADD player_pos,160d     ; Di chuyen xuong 1 dong` = 160 byte
+    MOV direction,0         ; reset direction ve 0 de tránh viec di chuyen lien tuc mà k can nhan phim
+    
+    JMP MAIN_LOOP   
+key_pressed:
+   mov ah, 0                        ;Cho nhan phim
+   int 16h
+   
+   cmp ah, 39h                 
+   je spaceKey 
+   
+   cmp ah, 48h
+   je upKey
+   
+   cmp ah, 50h
+   je downKey
+   
+   cmp ah, 4Bh
+   je leftKey
+   
+   cmp ah, 4Dh
+   je rightKey
+   
+   jmp main_loop
+   
+spaceKey:                           ;Shoot
+   cmp arrow_status, 0
+   je shoot
+   jmp main_loop
+   
+upKey:                              ;Di chuyen player len
+   mov direction, 8
+   jmp main_loop
+   
+downKey:                            ;Di chuyen player xuong
+   mov direction, 2
+   jmp main_loop
+   
+rightKey: 
+   mov cl, ' '
+   mov bx, balloon_pos
+   mov es:[bx], cx                       ;Hit++  (debug)
+   jmp hit
+   
+leftKey:
+   mov cl, ' '
+   mov bx, balloon_pos
+   mov es:[bx], cx
+   mov balloon_pos, 3860d                         ;Miss++ (debug)
+   inc miss
+   call show_score
+   lea dx, state
+   mov ah, 9
+   int 21h
+   mov ah, 2
+   mov dl, 0dh
+   int 21h
+   jmp main_loop
+   
+shoot:
+   mov dx, player_pos
+   mov arrow_pos, dx                ;Dat mui ten o vi tri player
+   
+   mov dx, player_pos
+   mov arrow_limit, dx
+   add arrow_limit, 22d
+   
+   mov arrow_status, 1d             ;Mui ten dang bay tranh spam ban  
+   jmp main_loop
+   
+miss_balloon:
+   add miss, 1                      ;Tang miss len 1
+   call show_score                  
+   lea dx, state
+   mov ah, 9
+   int 21h                          ;Hien thi diem moi
+   mov ah, 2
+   mov dl, 0dh                      ;Xuong dong de tranh in de
+   int 21h
+   jmp create_balloon 
+   
+create_balloon:
+   mov balloon_pos, 3860d
+   jmp render_balloon
+   
+hide_arrow:
+   mov arrow_status, 0              ;Mui ten chua duoc ban
+   
+   mov cl, ' '                      ;Gan khoang trong vao cx
+   mov bx, arrow_pos
+   mov es:[bx], cx                  ;Xoa mui ten
+   
+   cmp balloon_pos, 0d               ;Kiem tra vi tri cua bong
+   jle miss_balloon                  ;If bong khong con trong man hinh thi nhay den miss
+   jmp render_balloon                ;Else tiep tuc ve bong
+   
+game_over:
+   call clear_screen                ;Tha la bo di het ta lam lai tu dau
+   mov currentScoreOfPlayer1, 0
+   mov currentScoreOfPlayer2, 0
+   
+   mov ah, 9                        ;In diem cao nhat cua moi player
+   mov dx, offset high_score
+   int 21h
+   
+   call score_list
+   mov ah, 9
+   mov dx, offset name_list
+   int 21h
+   
+   mov ah, 9
+   mov dx, offset game_over_board
+   int 21h
+   
+   mov cl, ' '
+   mov bx, arrow_pos
+   mov bx, player_pos 
+    
+   mov hits, 0                      ;Reset cac gia tri de play again
+   mov miss, 0
+   mov player_pos, 1760d
+   mov arrow_pos, 0d
+   mov arrow_status, 0d
+   mov arrow_limit, 22d
+   mov balloon_pos, 3860d
+   mov direction, 0d
+   
+   jmp input
+   
+update_highScore1:                                                                
+        mov greatestScoreOfPlayer1, ax
+        mov highScore, ax
+            
+        call show_score 
+        mov ah, 9                                                      
+        lea dx, state
+        int 21h
+        mov ah, 2                                                                  
+        mov dl, 0dh
+        int 21h    
+        jmp create_balloon    
+            
+update_highScore2:                                                                 
+        mov greatestScoreOfPlayer2, ax    
+        mov highScore, ax
+            
+        call show_score
+        mov ah, 9                                                          
+        lea dx, state 
+        int 21h
+        mov ah, 2                                                                 
+        mov dl, 0dh
+        int 21h    
+        jmp create_balloon    
+
+show_name1:
+       call clear_screen
+       mov ax, @data                                                                     
+       mov ds, ax
+       lea dx, msg                                                                 
+       mov ah, 9                                                                       
+       int 21h
+       
+       mov si, offset name_player1                                                         
+       mov cx, 2                                                                    
+         
+loop2nd:
+       mov dl, [si]
+       mov ah, 2                                                               
+       int 21h
+       inc si
+       loop loop2nd                                                               
+
+       mov ah, 9
+       lea dx,crlf
+       int 21h   
+           
+       call show_score                                                             
+       lea dx,state
+       mov ah,9
+       int 21h
+
+       mov ah,2                                                                    
+       mov dl,0dh
+       int 21h   
+       mov times,1                                                                
+       jmp main_loop
+       
+show_name2:
+       mov ax, @data                                                              
+       mov ds, ax
+       lea dx, msg
+       mov ah, 9
+       int 21h
+       
+       mov si, offset name_player2
+       mov cx, 2 
+         
+loop22nd:
+       mov dl, [si]
+       mov ah, 2
+       int 21h
+       inc si
+       loop loop22nd
+
+       mov ah, 9
+       lea dx,crlf
+       int 21h  
+
+       call show_score
+       lea dx,state
+       mov ah,9
+       int 21h
+
+       mov ah,2
+       mov dl,0dh
+       int 21h 
+       mov times, 2
+       jmp main_loop 
+
+p1shootCorrect:                                                               
+       inc currentScoreOfPlayer1
+       mov dx, greatestScoreOfPlayer1
+       mov cx, currentScoreOfPlayer1
+       cmp cx, dx
+       jg updateGreatestScoreOfPlayer1                                                 
+            
+       mov bx, highScore
+       mov ax, greatestScoreOfPlayer1 
+       cmp ax, bx  
+       jg update_highScore1 
+       
+       call show_score
+       lea dx,state
+       mov ah,9
+       int 21h
+       mov ah,2
+       mov dl, 0dh                                                                                                                                                             
+       int 21h    
+       jmp create_balloon                                              
+
+       
+p2shootCorrect:                                                                 
+       inc currentScoreOfPlayer2
+       mov dx, greatestScoreOfPlayer2
+       mov cx, currentScoreOfPlayer2
+       cmp cx, dx
+       jg updateGreatestScoreOfPlayer2                                                    
+
+       mov bx, highScore
+       mov ax, greatestScoreOfPlayer2 
+       cmp ax, bx  
+       jg update_highScore2                                             
+       
+       call show_score                                                  
+            lea dx,state
+            mov ah,9
+            int 21h
+            
+            mov ah,2                                                     
+            mov dl, 0dh                                                                
+            int 21h    
+            jmp create_balloon                                           
+
+updateGreatestScoreOfPlayer1:                                                            
+         mov dx, cx 
+         mov greatestScoreOfPlayer1, dx                                          
+         mov bx, highScore
+         mov ax, dx 
+         cmp ax, bx  
+         jg update_highScore1 
+       
+         call show_score                                                 
+              lea dx,state
+              mov ah,9
+              int 21h
+              mov ah,2                                                
+              mov dl, 0dh                                                               
+              int 21h    
+              jmp create_balloon                                          
+
+updateGreatestScoreOfPlayer2:                                                             
+       mov dx, cx
+       mov greatestScoreOfPlayer2, dx 
+       mov bx, highScore
+       mov ax, dx 
+       cmp ax, bx                                               ;
+       jg update_highScore2    
+       
+       call show_score                                                  
+            lea dx,state
+            mov ah,9
+            int 21h
+            mov ah,2                                                    
+            mov dl, 0dh
+            int 21h    
+            jmp create_balloon                                          
+
+main endp
+
+show_score proc                                                        
+    lea bx,state
+    mov cx, highScore
+    add cx,48d                                                       
+    mov [bx],    9d
+    mov [bx+1],  9d
+    mov [bx+2],  9d
+    mov [bx+3],  'H'
+    mov [bx+4],  'i'                                        
+    mov [bx+5],  'g'
+    mov [bx+6],  'h'
+    mov [bx+7],  ' '
+    mov [bx+8],  'S'
+    mov [bx+9],  'c'
+    mov [bx+10], 'o'
+    mov [bx+11], 'r'
+    mov [bx+12], 'e'
+    mov [bx+13], ':'
+    mov [bx+14], cx  
+    mov dx, hits
+    add dx,48d 
+    mov [bx+15], 9d
+    mov [bx+16], 'H'
+    mov [bx+17], 'i'                                        
+    mov [bx+18], 't'
+    mov [bx+19], 's'
+    mov [bx+20], ':'
+    mov [bx+21], dx
+    mov dx, miss
+    add dx,48d                                                       
+    mov [bx+22], ' '
+    mov [bx+23], 'M'
+    mov [bx+24], 'i'
+    mov [bx+25], 's'
+    mov [bx+26], 's'
+    mov [bx+27], ':'
+    mov [bx+28], dx  
+ret    
+show_score endp 
+
+clear_screen proc near
+        mov ah,0                                                         
+        mov al,3                                                        
+        int 10h                                                         
+ret
+clear_screen endp 
+
+display_name1 proc
+     cmp if_p1, 0                                                    
+     jne show_name1
+     
+     mov times, 1                                                     
+     
+     mov ax, @data                                                      
+     mov ds, ax
+     lea dx, msg
+     mov ah, 9                                                        
+     int 21h
+        
+     mov cx, 2
+     mov si, offset name_player1
+     
+   loop1:
+     mov ah,1                                                          
+     int 21h
+     mov [si], al                                                        
+     inc si
+     loop loop1
+      
+     call clear_screen
+     mov ax, @data
+     mov ds, ax
+     lea dx, msg
+     mov ah, 9
+     int 21h
+     mov si, offset name_player1
+     mov cx, 2 
+         
+   loop2:
+     mov dl, [si]
+     mov ah, 2
+     int 21h
+     inc si
+     loop loop2
+
+     mov ah, 9
+     lea dx,crlf
+     int 21h   
+
+    call show_score
+    lea dx,state
+    mov ah,9
+    int 21h
+
+    mov ah,2                                                           
+    mov dl,0dh
+    int 21h
+    inc if_p1
+    jmp main_loop 
+ret
+display_name1 endp
+
+display_name2 proc
+     cmp if_p2, 0                                                 
+     jne show_name2
+     
+     mov times, 2
+     mov ax, @data
+     mov ds, ax
+     lea dx, msg
+     mov ah, 9                                                     
+     int 21h
+
+     mov cx, 2
+     mov si, offset name_player2                                               
+     
+   loop12:
+     mov ah,1
+     int 21h
+     mov [si], al
+     inc si
+     loop loop12
+      
+     call clear_screen
+     mov ax, @data
+     mov ds, ax
+     lea dx, msg
+     mov ah, 9
+     int 21h
+     mov si, offset name_player2
+     mov cx, 2 
+         
+   loop22:
+     mov dl, [si]
+     mov ah, 2
+     int 21h
+     inc si
+     loop loop22
+
+     mov ah, 9
+     lea dx,crlf
+     int 21h   
+   
+    call show_score
+    lea dx,state
+    mov ah,9
+    int 21h
+
+    mov ah,2
+    mov dl,0dh
+    int 21h
+    inc if_p2
+    jmp main_loop 
+ret
+display_name2 endp
+
+score_list proc 
+    lea bx,name_list
+    mov cx, greatestScoreOfPlayer1
+    mov ax, greatestScoreOfPlayer2
+    cmp cx, ax                                                        
+    jg best_1                                                          
+                                                                       
+
+    mov  dx, name_player2
+    add ax,48d
+    mov [bx],  10d
+    mov [bx+57], dx     
+    mov [bx+77], ax
+    
+    mov  dx, name_player1
+    add cx,48d
+    mov [bx+137],  10d
+    mov [bx+138], dx
+    mov [bx+158], cx     
+ret
+score_list endp
+
+best_1 proc
+    mov  dx, name_player1
+    add cx,48d
+    mov [bx],  10d
+    mov [bx+57], dx     
+    mov [bx+77], cx
+    
+    mov  dx, name_player2
+    add ax,48d
+    mov [bx+137],  10d
+    mov [bx+138], dx
+    mov [bx+158], ax
+ret
+best_1 endp
+
+end main
+
+   
+         
