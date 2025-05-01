@@ -366,7 +366,7 @@ game_over:
    mov currentScoreOfPlayer1, 0
    mov currentScoreOfPlayer2, 0
    
-   mov ah, 9                        ;In ra doan highscore, score va name
+   mov ah, 9                        ;In ra khung highscore, score va name
    mov dx, offset high_score
    int 21h
    
@@ -379,7 +379,7 @@ game_over:
    mov dx, offset game_over_board   ;In ra phan gameover
    int 21h 
     
-   mov hits, 0                      ;Reset cac gia tri de play again
+   mov hits, 0                      ;Reset cac gia tri ve ban dau de play again
    mov miss, 0
    mov player_pos, 1760d
    mov arrow_pos, 0d
