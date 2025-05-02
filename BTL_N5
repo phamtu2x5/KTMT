@@ -486,7 +486,7 @@ p1shootCorrect:
        mov dx, greatestScoreOfPlayer1   ; Lay diem cao nhat cua nguoi choi 1
        mov cx, currentScoreOfPlayer1    ; Lay diem hien tai
        cmp cx, dx                       ; So sanh diem hien tai vs diem cao nhat cua nguoi choi 1
-       jg updateGreatestScoreOfPlayer1  ; Neu diem cao hon, cap nhat diem cao nhất                                                 
+       jg updateGreatestScoreOfPlayer1  ; Neu diem cao hon, cap nhat diem cao nh?t                                                 
             
        mov bx, highScore                ; Lay diem cao global hien tai
        mov ax, greatestScoreOfPlayer1   ; Lay diem cao nhat
@@ -507,7 +507,7 @@ p2shootCorrect:
        mov dx, greatestScoreOfPlayer2   ; Lay diem cao nhat cua nguoi choi 2
        mov cx, currentScoreOfPlayer2    ; Lay diem hien tai
        cmp cx, dx                       ; So sanh diem hien tai vs diem cao nhat cua nguoi choi 2
-       jg updateGreatestScoreOfPlayer2  ; Neu diem cao hon, cap nhat diem cao nhất                                                 
+       jg updateGreatestScoreOfPlayer2  ; Neu diem cao hon, cap nhat diem cao nh?t                                                 
 
        mov bx, highScore                ; Lay diem cao hien tai
        mov ax, greatestScoreOfPlayer2   ; Lay diem cao nhat
@@ -663,16 +663,16 @@ display_name1 proc
 ret
 display_name1 endp
 
-display_name2 proc
-     cmp if_p2, 0                                                 
+display_name2 proc                                        ;Kiem tra xem nguoi choi 2 da choi lan nao chua
+     cmp if_p2, 0                                         ;Neu roi -> In ra Ten va tiep tuc choi       
      jne show_name2
      
-     mov times, 2
+     mov times, 2                                         ;Cap nhat dang la luot choi cua Player2
      mov ax, @data
      mov ds, ax
      lea dx, msg
      mov ah, 9                                                     
-     int 21h
+     int 21h                                              ;In ra thong bao nhap Ten o lan dau choi
 
      mov cx, 2
      mov si, offset name_player2                                               
