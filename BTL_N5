@@ -391,222 +391,222 @@ game_over:
    jmp input
    
 update_highScore1:                                                                
-        mov greatestScoreOfPlayer1, ax
-        mov highScore, ax
+        mov greatestScoreOfPlayer1, ax  ; Luu diem cao nhat cua nguoi choi 1
+        mov highScore, ax                ; Cap nhat diem cao hien tai
             
-        call show_score 
-        mov ah, 9                                                      
-        lea dx, state
-        int 21h
-        mov ah, 2                                                                  
-        mov dl, 0dh
-        int 21h    
-        jmp create_balloon    
+        call show_score                   ; Goi ham hien thi diem so
+        mov ah, 9                        ; Chuan bi hien thi chuoi
+        lea dx, state                    ; Lay dia chi cua bien state
+        int 21h                          
+        mov ah, 2                        ; Chuan bi in ky tu
+        mov dl, 0dh                      ; Ky tu xuong dong
+        int 21h                          
+        jmp create_balloon               ; Quay ve tao bong bay
             
 update_highScore2:                                                                 
-        mov greatestScoreOfPlayer2, ax    
-        mov highScore, ax
+        mov greatestScoreOfPlayer2, ax  ; Luu diem cao nhat cua nguoi choi 2
+        mov highScore, ax                ; Cap nhat diem cao hien tai
             
-        call show_score
-        mov ah, 9                                                          
-        lea dx, state 
-        int 21h
-        mov ah, 2                                                                 
-        mov dl, 0dh
-        int 21h    
-        jmp create_balloon    
+        call show_score                   ; Goi ham hien thi diem so
+        mov ah, 9                        ; Chuan bi hien thi chuoi
+        lea dx, state                    ; Lay dia chi cua bien state 
+        int 21h                          
+        mov ah, 2                        ; Chuan bi in ky tu
+        mov dl, 0dh                      ; Ky tu xuong dong
+        int 21h                          
+        jmp create_balloon               ; Quay ve tao bong bay    
 
 show_name1:
-       call clear_screen
-       mov ax, @data                                                                     
-       mov ds, ax
-       lea dx, msg                                                                 
-       mov ah, 9                                                                       
-       int 21h
+       call clear_screen                 ; Xoa man hinh
+       mov ax, @data                     
+       mov ds, ax                        
+       lea dx, msg                       ; Lay dia chi cua thong diep
+       mov ah, 9                        ; Chuan bi hien thi chuoi
+       int 21h                          
        
-       mov si, offset name_player1                                                         
-       mov cx, 2                                                                    
+       mov si, offset name_player1      ; Lay dia chi ten nguoi choi 1
+       mov cx, 2                        ; So ky tu can hien thi
          
 loop2nd:
-       mov dl, [si]
-       mov ah, 2                                                               
-       int 21h
-       inc si
-       loop loop2nd                                                               
+       mov dl, [si]                     ; Lay ky tu tu dia chi
+       mov ah, 2                        ; Chuan bi in ky tu
+       int 21h                          ; Goi ngat 21h - in ky tu
+       inc si                            ; Tang dia chi
+       loop loop2nd                     ; Lap lai cho den khi cx = 0
 
-       mov ah, 9
-       lea dx,crlf
-       int 21h   
+       mov ah, 9                        ; Chuan bi hien thi chuoi
+       lea dx, crlf                     ; Lay dia chi ky tu xuong dong
+       int 21h                          ; Goi ngat 21h - hien thi chuoi
            
-       call show_score                                                             
-       lea dx,state
-       mov ah,9
-       int 21h
+       call show_score                  ; Goi ham hien thi diem so                                                             
+       lea dx, state                    ; Lay dia chi cua bien state
+       mov ah, 9                        ; Chuan bi hien thi chuoi
+       int 21h                          ; Goi ngat 21h - hien thi chuoi
 
-       mov ah,2                                                                    
-       mov dl,0dh
-       int 21h   
-       mov times,1                                                                
-       jmp main_loop
+       mov ah, 2                        ; Chuan bi in ky tu
+       mov dl, 0dh                      ; Ky tu xuong dong
+       int 21h                              
+       mov times, 1                     ; Gan bien times cho nguoi choi 1
+       jmp main_loop                    ; Quay ve vong lap chinh
        
 show_name2:
-       mov ax, @data                                                              
-       mov ds, ax
-       lea dx, msg
-       mov ah, 9
-       int 21h
+       mov ax, @data                    
+       mov ds, ax                       
+       lea dx, msg                      ; Lay dia chi cua thong diep
+       mov ah, 9                        ; Chuan bi hien thi chuoi
+       int 21h                          ; Goi ngat 21h - hien thi chuoi
        
-       mov si, offset name_player2
-       mov cx, 2 
+       mov si, offset name_player2      ; Lay dia chi ten nguoi choi 2
+       mov cx, 2                        ; So ky tu can hien thi
          
 loop22nd:
-       mov dl, [si]
-       mov ah, 2
-       int 21h
-       inc si
-       loop loop22nd
+       mov dl, [si]                     ; Lay ky tu tu dia chi
+       mov ah, 2                        ; Chuan bi in ky tu
+       int 21h                          ; Goi ngat 21h - in ky tu
+       inc si                            ; Tang dia chi
+       loop loop22nd                    ; Lap lai cho den khi cx = 0
 
-       mov ah, 9
-       lea dx,crlf
-       int 21h  
+       mov ah, 9                        ; Chuan bi hien thi chuoi
+       lea dx, crlf                     ; Lay dia chi ky tu xuong dong
+       int 21h                          ; Goi ngat 21h - hien thi chuoi  
 
-       call show_score
-       lea dx,state
-       mov ah,9
-       int 21h
+       call show_score                  ; Goi ham hien thi diem so
+       lea dx, state                    ; Lay dia chi cua bien state
+       mov ah, 9                        ; Chuan bi hien thi chuoi
+       int 21h                          ; Goi ngat 21h - hien thi chuoi
 
-       mov ah,2
-       mov dl,0dh
-       int 21h 
-       mov times, 2
-       jmp main_loop 
+       mov ah, 2                        ; Chuan bi in ky tu
+       mov dl, 0dh                      ; Ky tu xuong dong
+       int 21h                          ; Goi ngat 21h - in ky tu 
+       mov times, 2                     ; Gan bien times cho nguoi choi 2
+       jmp main_loop                    ; Quay ve vong lap chinh 
 
 p1shootCorrect:                                                               
-       inc currentScoreOfPlayer1
-       mov dx, greatestScoreOfPlayer1
-       mov cx, currentScoreOfPlayer1
-       cmp cx, dx
-       jg updateGreatestScoreOfPlayer1                                                 
+       inc currentScoreOfPlayer1        ; Tang diem cho nguoi choi 1
+       mov dx, greatestScoreOfPlayer1   ; Lay diem cao nhat cua nguoi choi 1
+       mov cx, currentScoreOfPlayer1    ; Lay diem hien tai
+       cmp cx, dx                       ; So sanh diem hien tai vs diem cao nhat cua nguoi choi 1
+       jg updateGreatestScoreOfPlayer1  ; Neu diem cao hon, cap nhat diem cao nhất                                                 
             
-       mov bx, highScore
-       mov ax, greatestScoreOfPlayer1 
-       cmp ax, bx  
-       jg update_highScore1 
+       mov bx, highScore                ; Lay diem cao global hien tai
+       mov ax, greatestScoreOfPlayer1   ; Lay diem cao nhat
+       cmp ax, bx                       ; So sanh diem cao nhat vs diem cao hien tai
+       jg update_highScore1             ; Neu diem cao nhat lon hon, cap nhat diem cao 
        
-       call show_score
-       lea dx,state
-       mov ah,9
-       int 21h
-       mov ah,2
-       mov dl, 0dh                                                                                                                                                             
-       int 21h    
-       jmp create_balloon                                              
+       call show_score                  ; Goi ham hien thi diem so
+       lea dx, state                    ; Lay dia chi cua bien state
+       mov ah, 9                        ; Chuan bi hien thi chuoi
+       int 21h                          ; Goi ngat 21h - hien thi chuoi
+       mov ah, 2                        ; Chuan bi in ky tu
+       mov dl, 0dh                      ; Ky tu xuong dong                                                                                                                                                             
+       int 21h                          ; Goi ngat 21h - in ky tu    
+       jmp create_balloon               ; Quay ve tao bong bay                                              
 
-       
 p2shootCorrect:                                                                 
-       inc currentScoreOfPlayer2
-       mov dx, greatestScoreOfPlayer2
-       mov cx, currentScoreOfPlayer2
-       cmp cx, dx
-       jg updateGreatestScoreOfPlayer2                                                    
+       inc currentScoreOfPlayer2        ; Tang diem cho nguoi choi 2
+       mov dx, greatestScoreOfPlayer2   ; Lay diem cao nhat cua nguoi choi 2
+       mov cx, currentScoreOfPlayer2    ; Lay diem hien tai
+       cmp cx, dx                       ; So sanh diem hien tai vs diem cao nhat cua nguoi choi 2
+       jg updateGreatestScoreOfPlayer2  ; Neu diem cao hon, cap nhat diem cao nhất                                                 
 
-       mov bx, highScore
-       mov ax, greatestScoreOfPlayer2 
-       cmp ax, bx  
-       jg update_highScore2                                             
+       mov bx, highScore                ; Lay diem cao hien tai
+       mov ax, greatestScoreOfPlayer2   ; Lay diem cao nhat
+       cmp ax, bx                       ; So sanh diem cao nhat vs diem cao hien tai
+       jg update_highScore2             ; Neu diem cao nhat lon hon, cap nhat diem cao 
        
-       call show_score                                                  
-            lea dx,state
-            mov ah,9
-            int 21h
+       call show_score                  ; Goi ham hien thi diem so                                                  
+       lea dx, state                    ; Lay dia chi cua bien state
+       mov ah, 9                        ; Chuan bi hien thi chuoi
+       int 21h                          ; Goi ngat 21h - hien thi chuoi
             
-            mov ah,2                                                     
-            mov dl, 0dh                                                                
-            int 21h    
-            jmp create_balloon                                           
+       mov ah, 2                        ; Chuan bi in ky tu
+       mov dl, 0dh                      ; Ky tu xuong dong
+       int 21h                          ; Goi ngat 21h - in ky tu    
+       jmp create_balloon               ; Quay ve tao bong bay                                           
 
 updateGreatestScoreOfPlayer1:                                                            
-         mov dx, cx 
-         mov greatestScoreOfPlayer1, dx                                          
-         mov bx, highScore
-         mov ax, dx 
-         cmp ax, bx  
-         jg update_highScore1 
+         mov dx, cx                     ; Luu diem hien tai vao dx
+         mov greatestScoreOfPlayer1, dx  ; Cap nhat diem cao nhat cua nguoi choi 1
+         mov bx, highScore               ; Lay diem cao hien tai
+         mov ax, dx                      ; Lay diem cao nhat
+         cmp ax, bx                      ; So sanh diem cao nhat vs diem cao hien tai
+         jg update_highScore1            ; Neu diem cao nhat lon hon, cap nhat diem cao 
        
-         call show_score                                                 
-              lea dx,state
-              mov ah,9
-              int 21h
-              mov ah,2                                                
-              mov dl, 0dh                                                               
-              int 21h    
-              jmp create_balloon                                          
+         call show_score                  ; Goi ham hien thi diem so                                                 
+         lea dx, state                   ; Lay dia chi cua bien state
+         mov ah, 9                       ; Chuan bi hien thi chuoi
+         int 21h                         ; Goi ngat 21h - hien thi chuoi
+         mov ah, 2                       ; Chuan bi in ky tu
+         mov dl, 0dh                     ; Ky tu xuong dong
+         int 21h                         ; Goi ngat 21h - in ky tu    
+         jmp create_balloon              ; Quay ve tao bong bay                                          
 
 updateGreatestScoreOfPlayer2:                                                             
-       mov dx, cx
-       mov greatestScoreOfPlayer2, dx 
-       mov bx, highScore
-       mov ax, dx 
-       cmp ax, bx                                               ;
-       jg update_highScore2    
+       mov dx, cx                       ; Luu diem hien tai vao dx
+       mov greatestScoreOfPlayer2, dx   ; Cap nhat diem cao nhat cua nguoi choi 2
+       mov bx, highScore                 ; Lay diem cao hien tai
+       mov ax, dx                       ; Lay diem cao nhat
+       cmp ax, bx                       ; So sanh diem cao nhat vs diem cao hien tai
+       jg update_highScore2             ; Neu diem cao nhat lon hon, cap nhat diem cao 
        
-       call show_score                                                  
-            lea dx,state
-            mov ah,9
-            int 21h
-            mov ah,2                                                    
-            mov dl, 0dh
-            int 21h    
-            jmp create_balloon                                          
+       call show_score                  ; Goi ham hien thi diem so                                                  
+       lea dx, state                    ; Lay dia chi cua bien state
+       mov ah, 9                        ; Chuan bi hien thi chuoi
+       int 21h                          ; Goi ngat 21h - hien thi chuoi
+       mov ah, 2                        ; Chuan bi in ky tu
+       mov dl, 0dh                      ; Ky tu xuong dong
+       int 21h                          ; Goi ngat 21h - in ky tu    
+       jmp create_balloon               ; Quay ve tao bong bay                                          
 
 main endp
 
 show_score proc                                                        
-    lea bx,state
-    mov cx, highScore
-    add cx,48d                                                       
-    mov [bx],    9d
-    mov [bx+1],  9d
-    mov [bx+2],  9d
-    mov [bx+3],  'H'
-    mov [bx+4],  'i'                                        
-    mov [bx+5],  'g'
-    mov [bx+6],  'h'
-    mov [bx+7],  ' '
-    mov [bx+8],  'S'
-    mov [bx+9],  'c'
-    mov [bx+10], 'o'
-    mov [bx+11], 'r'
-    mov [bx+12], 'e'
-    mov [bx+13], ':'
-    mov [bx+14], cx  
-    mov dx, hits
-    add dx,48d 
-    mov [bx+15], 9d
-    mov [bx+16], 'H'
-    mov [bx+17], 'i'                                        
-    mov [bx+18], 't'
-    mov [bx+19], 's'
-    mov [bx+20], ':'
-    mov [bx+21], dx
-    mov dx, miss
-    add dx,48d                                                       
-    mov [bx+22], ' '
-    mov [bx+23], 'M'
-    mov [bx+24], 'i'
-    mov [bx+25], 's'
-    mov [bx+26], 's'
-    mov [bx+27], ':'
-    mov [bx+28], dx  
+    lea bx,state                      ; Lay dia chi cua bien state
+    mov cx, highScore                 ; Lay diem cao hien tai
+    add cx,48d                        ; Chuyen sang ky tu
+    mov [bx],    9d                   ; Thong tin diem so
+    mov [bx+1],  9d                   ; Ky tu xuong dong
+    mov [bx+2],  9d                   ; Ky tu xuong dong
+    mov [bx+3],  'H'                  ; Ky tu 'H'
+    mov [bx+4],  'i'                  ; Ky tu 'i'                                        
+    mov [bx+5],  'g'                  ; Ky tu 'g'
+    mov [bx+6],  'h'                  ; Ky tu 'h'
+    mov [bx+7],  ' '                  ; Khoang trang
+    mov [bx+8],  'S'                  ; Ky tu 'S'
+    mov [bx+9],  'c'                  ; Ky tu 'c'
+    mov [bx+10], 'o'                  ; Ky tu 'o'
+    mov [bx+11], 'r'                  ; Ky tu 'r'
+    mov [bx+12], 'e'                  ; Ky tu 'e'
+    mov [bx+13], ':'                  ; Ky tu ':'
+    mov [bx+14], cx                   ; Diem cao hien tai
+    mov dx, hits                      ; Lay so lan da cham
+    add dx,48d                        ; Chuyen sang ky tu 
+    mov [bx+15], 9d                   ; Ky tu xuong dong
+    mov [bx+16], 'H'                  ; Ky tu 'H'
+    mov [bx+17], 'i'                  ; Ky tu 'i'                                        
+    mov [bx+18], 't'                  ; Ky tu 't'
+    mov [bx+19], 's'                  ; Ky tu 's'
+    mov [bx+20], ':'                  ; Ky tu ':'
+    mov [bx+21], dx                   ; So lan da cham
+    mov dx, miss                      ; Lay so lan bo qua
+    add dx,48d                        ; Chuyen sang ky tu                                                       
+    mov [bx+22], ' '                  ; Khoang trang
+    mov [bx+23], 'M'                  ; Ky tu 'M'
+    mov [bx+24], 'i'                  ; Ky tu 'i'
+    mov [bx+25], 's'                  ; Ky tu 's'
+    mov [bx+26], 's'                  ; Ky tu 's'
+    mov [bx+27], ':'                  ; Ky tu ':'
+    mov [bx+28], dx                   ; So lan bo qua
 ret    
 show_score endp 
 
 clear_screen proc near
-        mov ah,0                                                         
-        mov al,3                                                        
-        int 10h                                                         
+        mov ah,0                        ; Chuan bi cho ngat 10h
+        mov al,3                        ; Chon che do man hinh
+        int 10h                         ; Goi ngat 10h - xoa man hinh
 ret
 clear_screen endp 
+
 
 display_name1 proc
      cmp if_p1, 0                                  ;Kiem tra xem nguoi choi 1 da choi lan nao chua                  
