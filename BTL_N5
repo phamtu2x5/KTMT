@@ -455,9 +455,8 @@ show_name1:
     int 21h                               ; In xuong dong
 
     mov times, 1                          ; Danh dau dang la luot choi cua Player1
-    jmp main_loop
-ret
-                                          ; Quay ve vong lap chinh
+    jmp main_loop                         ; Quay ve vong lap chinh
+                                         
        
 show_name2: 
     call clear_screen                     ; Clear screen
@@ -487,7 +486,7 @@ show_name2:
 
     mov times, 2                          ; Danh dau dang la luot choi cua Player2
     jmp main_loop                         ; Quay ve vong lap chinh
-ret ;
+
 
 p1shootCorrect:                                                               
        inc currentScoreOfPlayer1        ; Tang diem cho nguoi choi 1
@@ -677,7 +676,7 @@ end_input_p1:                            ; Ket thuc vong lap nhap ten
 
     inc if_p1                             ; Danh dau Player1 da nhap ten
     jmp main_loop
-ret
+    
 display_name1 endp
 
 display_name2 proc
@@ -743,7 +742,7 @@ end_input_p2:
 
     inc if_p2           
     jmp main_loop
-ret
+
 display_name2 endp
 
 ; Tao bang diem da xep hang, in ra ten 2 nguoi choi theo thu tu diem giam dan
