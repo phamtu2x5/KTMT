@@ -4,34 +4,39 @@
     if_p1 db 0d               ;Kiem tra xem nguoi choi 1 da nhap ten chua
     if_p2 db 0d               ;Kiem tra xem nguoi choi 2 da nhap ten chua
     crlf  db 13,10,'$'
-    player_pos    dw 1760d       ;Vi tri nguoi choi
+    player_pos    dw 1760d        ;Vi tri nguoi choi
     arrow_pos     dw 0d           ;Vi tri mui ten
-    arrow_status  db 0d        ;0=San sang de ban mui ten moi, !0=Co mui ten dang bay
-    arrow_limit   dw 22d        ;Gioi han bay cua mui ten
-    balloon_pos   dw 3860d      ;Vi tri bong bay
+    arrow_status  db 0d           ;0=San sang de ban mui ten moi, !0=Co mui ten dang bay
+    arrow_limit   dw 22d          ;Gioi han bay cua mui ten
+    balloon_pos   dw 3860d        ;Vi tri bong bay
     
     direction      db 0d          ;Huong di chuyen cua Player
-    direction_up   equ 8         ;Quy dinh ma so 8 cho huong len
-    direction_down equ 2       ;Quy dinh ma so 2 cho huong xuong
+    direction_up   equ 8          ;Quy dinh ma so 8 cho huong len
+    direction_down equ 2          ;Quy dinh ma so 2 cho huong xuong
     
-    high_score dw ' ',10,13,             
-               dw ' ',10,13,
-               dw '                                  High Scores: ',10,13,
-               
-               dw ' ',10,13,
-               dw ' ',10,13,
-               dw '                            Name      |      Score: $'       ,10,13,
-    name_list dw    '                                                                                                                                                                $',10,13,
+    high_score_header db 10,13,' ',10,13,'                              High Scores:',10,13,' ',10,13
+                      db '                     Name          |   Score',10,13,'$' 
+
+    score_line1 db '                     ',                    
+    name1_buf   db 10 dup(' '),                         
+                db '    |   ',                                           ;Bo dem dung de luu ten nguoi choi
+    score1_buf  db 5 dup(' '),
+                db 10, 13, '$'                                      ;Bo dem dung de luu diem
+
+    score_line2 db '                     ',                     
+    name2_buf   db 10 dup(' '),                                         
+                db '    |   ',                                           ;Bo dem dung de luu ten nguoi choi
+    score2_buf  db 5 dup(' '),
+                db 10, 13, '$'                                      ;Bo dem dung de luu diem
+    state      db 'iiiiiiiiiiiddddddddddddddddddd$',10,13,          ;Thanh trang thai dung de ghi ra highscore/hits/miss
     
-    state      db 'iiiiiiiiiiiddddddddddddddddddd$',10,13,   
-    
-    hits dw 0d
-    miss dw 0d
-    highScore dw 0d
-    greatestScoreOfPlayer1 dw 0d
-    greatestScoreOfPlayer2 dw 0d
-    currentScoreOfPlayer1  dw 0d
-    currentScoreOfPlayer2  dw 0d
+    hits dw 0d                                                      ;Gia tri hit
+    miss dw 0d                                                      ;Gia tri miss
+    highScore dw 0d                                                 ;Diem cao nhat
+    greatestScoreOfPlayer1 dw 0d                                    ;Diem cao nhat cua Player1
+    greatestScoreOfPlayer2 dw 0d                                    ;Diem cao nhat cua Player2
+    currentScoreOfPlayer1  dw 0d                                    ;Diem hien tai cua Player1
+    currentScoreOfPlayer2  dw 0d                                    ;Diem hien tai cua Player2
     
     game_over_board dw '  ',10,13
     dw ' ',10,13
@@ -46,7 +51,7 @@
     dw ' ',10,13
     dw '                        For 1st player press ( 1 ) ',10,13
     dw '                        For 2nd player press ( 2 ) ',10,13
-    dw '                     For retry with current player press ( enter ) $',10,13
+    dw '                     For retry with current player press ( enter ) $',10,13             ; Man hinh gameover
       
     TB_BATDAU dw '                                                                     ',10,13,
     dw '                                                                     ',10,13,
@@ -74,14 +79,16 @@
     dw '              *          >>>>Press Enter to start<<<<             *',10,13,
     dw '              *                                                   *',10,13,
     dw '              *                                                   *',10,13,
-    dw '              *****************************************************',10,13,'$'
+    dw '              *****************************************************',10,13,'$'          ;Man hinh game start
     
-    msg db 10, 13, " UserName: $"
+    msg db 10, 13, " UserName: $"      ;Thong bao nhap ten nguoi choi                     
     
-    name_player1 dw 2 dup(?)          ;Ten nguoi choi 1
-    name_player2 dw 2 dup(?)          ;Ten nguoi choi 2
+    name_player1 db 11 dup(?)          ;Ten Player1 1
+    len_player1  db ?                  ;Do dai ten Player1
+    name_player2 db 11 dup(?)          ;Ten Player 2   
+    len_player2  db ?                  ;Do dai ten Player2
     
-    times        db 0d                
+    times        db 0d                 ;Bien luu tru xem dang la luot choi cua Player1 hay Player2
        
 .Code
 Main Proc
@@ -362,34 +369,38 @@ hide_arrow:
    jmp render_balloon               ;Else tiep tuc ve bong
    
 game_over:
-   call clear_screen                ;Xoa man hinh
-   mov currentScoreOfPlayer1, 0
-   mov currentScoreOfPlayer2, 0
-   
-   mov ah, 9                        ;In ra khung highscore, score va name
-   mov dx, offset high_score
-   int 21h
-   
-   call score_list                    
-   mov ah, 9                        ;In ra ten cac nguoi choi
-   mov dx, offset name_list
-   int 21h
-   
-   mov ah, 9                         
-   mov dx, offset game_over_board   ;In ra phan gameover
-   int 21h 
+    call clear_screen                   ;Xoa man hinh
+    mov currentScoreOfPlayer1, 0        ;Reset diem
+    mov currentScoreOfPlayer2, 0        ;Reset diem
+
+    call score_list                     ;Goi ham in danh sach diem
+
+    mov ah, 9
+    lea dx, high_score_header
+    int 21h                             ;In ra dong chu Highscore
+
+    mov ah, 9
+    lea dx, score_line1                 
+    int 21h                             ;In ra diem nguoi choi cao nhat 
+
     
-   mov hits, 0                      ;Reset cac gia tri ve ban dau de play again
-   mov miss, 0
-   mov player_pos, 1760d
-   mov arrow_pos, 0d
-   mov arrow_status, 0d
-   mov arrow_limit, 22d
-   mov balloon_pos, 3860d
-   mov direction, 0d
+    mov ah, 9
+    lea dx, score_line2 
+    int 21h                             ;In ra diem nguoi choi cao thu hai
+
+    
+    mov ah, 9
+    mov dx, offset game_over_board      
+    int 21h                             ;In ra man hinh ket thuc game
+
+    mov hits, 0                         ;Reset hits
+    mov miss, 0                         ;Reset miss
+    mov player_pos, 1760d               ;Reset vi tri Player
    
-   jmp input
-   
+
+    jmp input                           ;Goi thao tac nhap xuat de bat dau choi lai 
+
+;Cap nhat diem cao nhat cua Player1   
 update_highScore1:                                                                
         mov greatestScoreOfPlayer1, ax  ; Luu diem cao nhat cua nguoi choi 1
         mov highScore, ax                ; Cap nhat diem cao hien tai
@@ -402,7 +413,8 @@ update_highScore1:
         mov dl, 0dh                      ; Ky tu xuong dong
         int 21h                          
         jmp create_balloon               ; Quay ve tao bong bay
-            
+
+;Cap nhat diem cao nhat cua Player2              
 update_highScore2:                                                                 
         mov greatestScoreOfPlayer2, ax  ; Luu diem cao nhat cua nguoi choi 2
         mov highScore, ax                ; Cap nhat diem cao hien tai
@@ -417,69 +429,65 @@ update_highScore2:
         jmp create_balloon               ; Quay ve tao bong bay    
 
 show_name1:
-       call clear_screen                 ; Xoa man hinh
-       mov ax, @data                     
-       mov ds, ax                        
-       lea dx, msg                       ; Lay dia chi cua thong diep
-       mov ah, 9                        ; Chuan bi hien thi chuoi
-       int 21h                          
+    call clear_screen                    ; Xoa man hinh
+    mov ax, @data
+    mov ds, ax
+    lea dx, msg                         
+    mov ah, 9
+    int 21h                              ; In ra dong chu UserName
+
+   
+    lea dx, name_player1
+    mov ah, 9
+    int 21h                              ; In ten player1
+
+    mov ah, 9
+    lea dx, crlf
+    int 21h
+
+    call show_score                       ; Goi thao tac xu ly state de in diem
+    lea dx, state
+    mov ah, 9
+    int 21h                               ; In highscore/hits/miss
+
+    mov ah, 2
+    mov dl, 0dh
+    int 21h                               ; In xuong dong
+
+    mov times, 1                          ; Danh dau dang la luot choi cua Player1
+    jmp main_loop
+ret
+                                          ; Quay ve vong lap chinh
        
-       mov si, offset name_player1      ; Lay dia chi ten nguoi choi 1
-       mov cx, 2                        ; So ky tu can hien thi
-         
-loop2nd:
-       mov dl, [si]                     ; Lay ky tu tu dia chi
-       mov ah, 2                        ; Chuan bi in ky tu
-       int 21h                          ; Goi ngat 21h - in ky tu
-       inc si                            ; Tang dia chi
-       loop loop2nd                     ; Lap lai cho den khi cx = 0
+show_name2: 
+    call clear_screen                     ; Clear screen
+    mov ax, @data
+    mov ds, ax
+    lea dx, msg             
+    mov ah, 9
+    int 21h                               ; In ra dong UserName
 
-       mov ah, 9                        ; Chuan bi hien thi chuoi
-       lea dx, crlf                     ; Lay dia chi ky tu xuong dong
-       int 21h                          ; Goi ngat 21h - hien thi chuoi
-           
-       call show_score                  ; Goi ham hien thi diem so                                                             
-       lea dx, state                    ; Lay dia chi cua bien state
-       mov ah, 9                        ; Chuan bi hien thi chuoi
-       int 21h                          ; Goi ngat 21h - hien thi chuoi
+  
+    lea dx, name_player2   
+    mov ah, 9
+    int 21h                               ; In ra ten Player2
 
-       mov ah, 2                        ; Chuan bi in ky tu
-       mov dl, 0dh                      ; Ky tu xuong dong
-       int 21h                              
-       mov times, 1                     ; Gan bien times cho nguoi choi 1
-       jmp main_loop                    ; Quay ve vong lap chinh
-       
-show_name2:
-       mov ax, @data                    
-       mov ds, ax                       
-       lea dx, msg                      ; Lay dia chi cua thong diep
-       mov ah, 9                        ; Chuan bi hien thi chuoi
-       int 21h                          ; Goi ngat 21h - hien thi chuoi
-       
-       mov si, offset name_player2      ; Lay dia chi ten nguoi choi 2
-       mov cx, 2                        ; So ky tu can hien thi
-         
-loop22nd:
-       mov dl, [si]                     ; Lay ky tu tu dia chi
-       mov ah, 2                        ; Chuan bi in ky tu
-       int 21h                          ; Goi ngat 21h - in ky tu
-       inc si                            ; Tang dia chi
-       loop loop22nd                    ; Lap lai cho den khi cx = 0
+    mov ah, 9
+    lea dx, crlf
+    int 21h                               ; In xuong dong
 
-       mov ah, 9                        ; Chuan bi hien thi chuoi
-       lea dx, crlf                     ; Lay dia chi ky tu xuong dong
-       int 21h                          ; Goi ngat 21h - hien thi chuoi  
+    call show_score                       ; Goi thao tac xu ly state de in diem
+    lea dx, state
+    mov ah, 9
+    int 21h                               ; In highscore/hits/miss
 
-       call show_score                  ; Goi ham hien thi diem so
-       lea dx, state                    ; Lay dia chi cua bien state
-       mov ah, 9                        ; Chuan bi hien thi chuoi
-       int 21h                          ; Goi ngat 21h - hien thi chuoi
+    mov ah, 2
+    mov dl, 0dh
+    int 21h                               ; In xuong dong
 
-       mov ah, 2                        ; Chuan bi in ky tu
-       mov dl, 0dh                      ; Ky tu xuong dong
-       int 21h                          ; Goi ngat 21h - in ky tu 
-       mov times, 2                     ; Gan bien times cho nguoi choi 2
-       jmp main_loop                    ; Quay ve vong lap chinh 
+    mov times, 2                          ; Danh dau dang la luot choi cua Player2
+    jmp main_loop                         ; Quay ve vong lap chinh
+ret ;
 
 p1shootCorrect:                                                               
        inc currentScoreOfPlayer1        ; Tang diem cho nguoi choi 1
@@ -607,152 +615,287 @@ clear_screen proc near
 ret
 clear_screen endp 
 
-
 display_name1 proc
-     cmp if_p1, 0                                  ;Kiem tra xem nguoi choi 1 da choi lan nao chua                  
-     jne show_name1                                ;Neu roi -> In ra Ten va tiep tuc choi 
-     
-     mov times, 1                                  ;Cap nhat dang la luot choi cua Player1                  
-     
-     mov ax, @data                                                      
-     mov ds, ax
-     lea dx, msg
-     mov ah, 9                                                        
-     int 21h                                       ;In ra thong bao nhap Ten o lan dau choi
-        
-     mov cx, 2
-     mov si, offset name_player1
-     
-   loop1:
-     mov ah,1                                                          
-     int 21h
-     mov [si], al                                                        
-     inc si
-     loop loop1
-      
-     call clear_screen
-     mov ax, @data
-     mov ds, ax
-     lea dx, msg
-     mov ah, 9
-     int 21h
-     mov si, offset name_player1
-     mov cx, 2 
-         
-   loop2:
-     mov dl, [si]
-     mov ah, 2
-     int 21h
-     inc si
-     loop loop2
+    cmp if_p1, 0
+    jne show_name1                      ; Neu nguoi choi 1 da nhap ten, In ra ten 
 
-     mov ah, 9
-     lea dx,crlf
-     int 21h   
+    mov times, 1                        ; Danh dau la luot choi cua Player1
 
-    call show_score
-    lea dx,state
+   
+    mov ax, @data                       
+    mov ds, ax
+    lea dx, msg                         
+    mov ah, 9
+    int 21h                              ; In ra chuoi Username
+
+    mov si, offset name_player1
+    mov byte ptr [si], '$'               ; Khoi tao bo dem name_player1 ban dau la 1 chuoi rong
+    mov bl, 0                            ; Dat bien dem so luong ky tu ban dau bl=0
+
+input_loop_p1:                           ; Vong lap nhap tung ky tu
+    mov ah, 1                   
+    int 21h                                 
+
+    cmp al, 0Dh                       
+    je end_input_p1                      ; Neu phim Enter duoc nhap vao thi ket thuc nhap ten
+
+   
+    cmp bl, 9                               
+    jge input_loop_p1                    ; Bo qua cac ky tu thua, gioi han do dai toi da cua ten la 9 ky tu
+
+    mov [si], al                         ; Luu ky tu vua nhap vao name_player1
+    inc si                               ; Tang si
+    inc bl                               ; Tang so luong ky tu da nhap
+    mov byte ptr [si], '$'               ; Dam bao ten da nhap luon co ky tu '$' o cuoi ten
+
+    jmp input_loop_p1                    ; Tiep tuc nhap ten
+
+end_input_p1:                            ; Ket thuc vong lap nhap ten
+    mov len_player1, bl                  ; Luu do dai ten Player1
+ 
+    call clear_screen                    ; Xoa man hinh
+    mov ax, @data
+    mov ds, ax
+    lea dx, msg            
     mov ah,9
     int 21h
+    lea dx, name_player1
+    int 21h                               ; In ra ten Player1
 
-    mov ah,2                                                           
-    mov dl,0dh
-    int 21h
-    inc if_p1
-    jmp main_loop 
+    mov ah, 9
+    lea dx, crlf
+    int 21h                               ; In xuong dong
+
+    call show_score                       ; Xu li diem
+    lea dx, state
+    mov ah, 9
+    int 21h                               ; In ra dong "Highscore/Hits/Miss"
+
+    mov ah, 2
+    mov dl, 0dh
+    int 21h                               ; In xuong dong
+
+    inc if_p1                             ; Danh dau Player1 da nhap ten
+    jmp main_loop
 ret
 display_name1 endp
 
-display_name2 proc                                        ;Kiem tra xem nguoi choi 2 da choi lan nao chua
-     cmp if_p2, 0                                         ;Neu roi -> In ra Ten va tiep tuc choi       
-     jne show_name2
-     
-     mov times, 2                                         ;Cap nhat dang la luot choi cua Player2
-     mov ax, @data
-     mov ds, ax
-     lea dx, msg
-     mov ah, 9                                                     
-     int 21h                                              ;In ra thong bao nhap Ten o lan dau choi
+display_name2 proc
+    cmp if_p2, 0
+    jne show_name2          
 
-     mov cx, 2
-     mov si, offset name_player2                                               
-     
-   loop12:
-     mov ah,1
-     int 21h
-     mov [si], al
-     inc si
-     loop loop12
-      
-     call clear_screen
-     mov ax, @data
-     mov ds, ax
-     lea dx, msg
-     mov ah, 9
-     int 21h
-     mov si, offset name_player2
-     mov cx, 2 
-         
-   loop22:
-     mov dl, [si]
-     mov ah, 2
-     int 21h
-     inc si
-     loop loop22
+    mov times, 2           
 
-     mov ah, 9
-     lea dx,crlf
-     int 21h   
    
-    call show_score
-    lea dx,state
-    mov ah,9
+    mov ax, @data
+    mov ds, ax
+    lea dx, msg
+    mov ah, 9
+    int 21h                
+
+    mov si, offset name_player2 
+    mov byte ptr [si], '$' 
+    mov bl, 0             
+
+input_loop_p2:             
+    mov ah, 1               
     int 21h
 
-    mov ah,2
-    mov dl,0dh
+    cmp al, 0Dh            
+    je end_input_p2        
+
+   
+    cmp bl, 9
+    jge input_loop_p2      
+
+    mov [si], al          
+    inc si                  
+    inc bl                 
+    mov byte ptr [si], '$' 
+
+    jmp input_loop_p2      
+
+end_input_p2:             
+    mov len_player2, bl    
+
+
+    call clear_screen    
+    mov ax, @data
+    mov ds, ax
+    mov ah,9
+    lea dx,msg
     int 21h
-    inc if_p2
-    jmp main_loop 
+    lea dx, name_player2   
+    int 21h
+
+    mov ah, 9
+    lea dx, crlf
+    int 21h
+
+    call show_score
+    lea dx, state
+    mov ah, 9
+    int 21h
+
+    mov ah, 2
+    mov dl, 0dh
+    int 21h
+
+    inc if_p2           
+    jmp main_loop
 ret
 display_name2 endp
 
-score_list proc 
-    lea bx,name_list
+; Tao bang diem da xep hang, in ra ten 2 nguoi choi theo thu tu diem giam dan
+score_list proc
+    ; --- Xoa buffer name1_buf ---
+    push di                                     ; Dua di vao stack de giu lai gia tri cu
+    mov al, ' '
+    mov cx, 10
+    lea di, name1_buf 
+clear_name1_loop:                               ; Vong lap reset name1_buf thanh 1 xau gom 10 ky tu ' '
+    mov [di], al
+    inc di
+    loop clear_name1_loop
+    pop di                                      ; Tra lai gia tri cua di ban dau
+
+    ; --- Xoa buffer name2_buf ---              ; Tuong tu nhung la reset name2_buf
+    push di                         
+    mov al, ' '
+    mov cx, 10
+    lea di, name2_buf
+clear_name2_loop:
+    mov [di], al
+    inc di
+    loop clear_name2_loop
+    pop di
+
+    ; --- Xoa buffer score1_buf ---             ; Vong lap reset score1_buf thanh 1 xau gom 5 ky tu ' '
+    push di
+    mov al, ' '
+    mov cx, 5
+    lea di, score1_buf
+clear_score1_loop:
+    mov al, ' '
+    mov [di], al
+    inc di
+    loop clear_score1_loop
+    pop di
+
+    ; --- Xoa buffer score2_buf ---             ; Vong lap reset score2_buf thanh 1 xau gom 5 ky tu ' '
+    push di
+    mov al, ' '
+    mov cx, 5
+    lea di, score2_buf
+clear_score2_loop:
+    mov al, ' '
+    mov [di], al
+    inc di
+    loop clear_score2_loop
+    pop di
+
+    ; --- So sanh diem P1 va P2 ---
     mov cx, greatestScoreOfPlayer1
     mov ax, greatestScoreOfPlayer2
-    cmp cx, ax                                                        
-    jg best_1                                                          
-                                                                       
+    cmp cx, ax
+    jge P1_wins_or_tie          ; Neu P1 >= P2, nhay den P1_wins_or_tie
 
-    mov  dx, name_player2
-    add ax,48d
-    mov [bx],  10d
-    mov [bx+57], dx     
-    mov [bx+77], ax
-    
-    mov  dx, name_player1
-    add cx,48d
-    mov [bx+137],  10d
-    mov [bx+138], dx
-    mov [bx+158], cx     
-ret
+; --- Truong hop P2 > P1 ---
+P2_is_higher:
+    ; Xu ly dong 1: Player 2
+    lea si, name_player2        ; Nguon ten P2
+    lea di, name1_buf           ; Dich ten dong 1
+    mov cx, 10                  ; So luong ky tu toi da
+    call Internal_Copy_Name     ; Goi ham copy ten
+    mov ax, greatestScoreOfPlayer2 ; Lay diem P2
+    lea di, score1_buf          ; Dich diem dong 1
+    call Internal_Format_Score  ; Goi ham dinh dang diem
+
+    ; Xu ly dong 2: Player 1
+    lea si, name_player1        ; Nguon ten P1
+    lea di, name2_buf           ; Dich ten dong 2
+    mov cx, 10                  ; So luong ky tu toi da
+    call Internal_Copy_Name     ; Goi ham copy ten
+    mov ax, greatestScoreOfPlayer1 ; Lay diem P1
+    lea di, score2_buf          ; Dich diem dong 2
+    call Internal_Format_Score  ; Goi ham dinh dang diem
+
+    jmp score_list_finished     ; Nhay den ket thuc
+
+; --- Truong hop P1 >= P2 ---
+P1_wins_or_tie:
+    ; Xu ly dong 1: Player 1
+    lea si, name_player1        ; Nguon ten P1
+    lea di, name1_buf           ; Dich ten dong 1
+    mov cx, 10                  ; So luong ky tu toi da
+    call Internal_Copy_Name     ; Goi ham copy ten
+    mov ax, greatestScoreOfPlayer1 ; Lay diem P1
+    lea di, score1_buf          ; Dich diem dong 1
+    call Internal_Format_Score  ; Goi ham dinh dang diem
+
+    ; Xu ly dong 2: Player 2
+    lea si, name_player2        ; Nguon ten P2
+    lea di, name2_buf           ; Dich ten dong 2
+    mov cx, 10                  ; So luong ky tu toi da
+    call Internal_Copy_Name     ; Goi ham copy ten
+    mov ax, greatestScoreOfPlayer2 ; Lay diem P2
+    lea di, score2_buf          ; Dich diem dong 2
+    call Internal_Format_Score  ; Goi ham dinh dang diem
+
+    jmp score_list_finished     ; Nhay den ket thuc
+
+; --- Chuong trinh con cuc bo: Copy ten ---
+Internal_Copy_Name:
+    push ax                     ; Luu ax vi dung al
+.copy_loop:
+    cmp cx, 0                   ; 
+    je .copy_done               ; Neu cx=0 thi nghia la da copy xong
+    mov al, [si]                ; Lay ky tu nguon tu name_player
+    cmp al, '$'                  
+    je .copy_done               ; Neu la ky tu ket thuc thi dung thao tac Copy
+    mov [di], al                ; Copy sang dich (name_buf)
+    inc si                      ; Tang con tro nguon
+    inc di                      ; Tang con tro dich
+    dec cx                      ; Giam bien dem
+    jmp .copy_loop              ; Lap lai
+.copy_done:
+    pop ax                      ; Phuc hoi ax
+    ret                         ; Quay ve
+
+; --- Chuong trinh con cuc bo: Dinh dang diem (0-99) ---
+Internal_Format_Score:
+    push bx                     ; Luu cac thanh ghi
+    push cx
+    push dx
+    push si
+
+    xor dx, dx                  ; Xoa dx truoc khi chia
+    mov bx, 10                  ; So chia
+    div bx                      ; Chia ax cho 10 => AX=Thuong(chuc), DX=Du(don vi)
+    mov cx, ax                  ; Luu hang chuc vao cx
+
+    mov ax, dx                  ; Lay hang don vi vao ax
+    add al, '0'                 ; Chuyen don vi sang ASCII
+    mov [di+1], al              ; Ghi vao vi tri thu 2 cua buffer diem
+
+    mov ax, cx                  ; Lay lai hang chuc vao ax
+    cmp al, 0                   ; Kiem tra hang chuc co bang 0 ko
+    jne .tens_not_zero          ; Khong bang 0 thi nhay
+    mov byte ptr [di], ' '      ; Neu bang 0 thi ghi space vao vi tri dau
+    jmp .format_done            ; Nhay den ket thuc format
+.tens_not_zero:
+    add al, '0'                 ; Chuyen hang chuc sang ASCII
+    mov [di], al                ; Ghi hang chuc vao vi tri dau
+.format_done:
+    pop si                      ; Phuc hoi cac thanh ghi
+    pop dx
+    pop cx
+    pop bx
+    ret                         ; Quay ve
+
+score_list_finished:
+    ret                         ; Ket thuc score_list
 score_list endp
-
-best_1 proc
-    mov  dx, name_player1
-    add cx,48d
-    mov [bx],  10d
-    mov [bx+57], dx     
-    mov [bx+77], cx
-    
-    mov  dx, name_player2
-    add ax,48d
-    mov [bx+137],  10d
-    mov [bx+138], dx
-    mov [bx+158], ax
-ret
-best_1 endp
 
 end main
 
